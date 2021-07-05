@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus, faEdit, faTrash, faSave, faWindowClose, faChevronUp } from "@fortawesome/free-solid-svg-icons";
+import { faPlus, faEdit, faTrash, faSave, faWindowClose, faChevronUp, faUndo } from "@fortawesome/free-solid-svg-icons";
 import { Button, message } from "antd";
+import { ReactSVG } from 'react-svg'
+import moment from "moment";
 
 import "./TodoList.scss";
 import ButtonComponent from "./Button";
-import moment from "moment";
 
 function TodoList() {
   const url = "https://60d05b407de0b2001710869b.mockapi.io/todos";
@@ -15,8 +16,13 @@ function TodoList() {
   const [isLoading, setIsLoading] = useState(false);
   const [needLoading, setNeedLoading] = useState(false);
   const [isCollapse, setIsCollapse] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [editName, setEditName] = useState("");
+
+  const [undoTitle, setUndoTitle] = useState('')
+  const [undoItem, setUndoItem] = useState()
+  const [undoTimer, setUndoTimer] = useState(0)
+
+  const [newName, setNewName] = useState('')
+  const [editName, setEditName] = useState('')
 
   const refInput = useRef(null)
 
@@ -39,7 +45,6 @@ function TodoList() {
             return moment(b.createdAt).unix() - moment(a.createdAt).unix()
           })
           setTodoList(resultsTrue);
-          console.log('hiendev ~ file: TodoList.js ~ line 62 ~ useEffect ~ resultsTrue', resultsTrue)
           setToDidList(results.filter(item => item.status === "did"));
           setNeedLoading(false);
           setIsLoading(false);
@@ -85,7 +90,9 @@ function TodoList() {
 
   // Edit item
   function onEditItem(item) {
-    setEditName(item.name);
+    setEditName(item.name)
+    setUndoItem(item)
+
     const newTodoList = todoList.map((todo) => {
       if (todo.id === item.id) return { ...todo, editing: true };
       return { ...todo, editing: false };
@@ -93,6 +100,7 @@ function TodoList() {
     setTodoList(newTodoList);
   }
 
+  // Save item when edit
   function onSaveItem(item) {
     setIsLoading(true);
     fetch(url + "/" + item.id, {
@@ -107,8 +115,10 @@ function TodoList() {
       .then((res) => res.json())
       .then(
         (result) => {
-          setNeedLoading(true);
-          setEditName("");
+          setNeedLoading(true)
+          setEditName("")
+          setUndoTitle('Modified: ' + item.name)
+          setUndoTimer(10)
           message.success("Edit successfully");
         },
         (error) => {
@@ -148,12 +158,15 @@ function TodoList() {
   }
 
   // Delete item
-  function onDeleteItem(idDelete) {
-    fetch(url + "/" + idDelete, { method: "DELETE" })
+  function onDeleteItem(item) {
+    fetch(url + "/" + item.id, { method: "DELETE" })
       .then((res) => res.json())
       .then(
         (result) => {
-          setNeedLoading(true);
+          setUndoTitle('Deleted: ' + item.name)
+          setUndoItem({ ...item, isDelete: true })
+          setNeedLoading(true)
+          setUndoTimer(10)
           message.success("Delete successfully");
         },
         (error) => {
@@ -166,17 +179,68 @@ function TodoList() {
       );
   }
 
+  useEffect(() => {
+    if (undoTimer > 0)
+      setTimeout(() => {
+        setUndoTimer(undoTimer - 1)
+      }, 1000);
+    else {
+      setUndoTitle('')
+      setUndoItem()
+    }
+  }, [undoTimer])
+
   // Focus edit input
   useEffect(() => {
     if (editName && refInput?.current) refInput.current.focus();
   }, [editName])
 
+  const onHandleUndo = () => {
+    fetch(undoItem.isDelete ? url : (url + "/" + undoItem.id), {
+      method: undoItem.isDelete ? "POST" : "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: undoItem.name,
+        createdAt: moment(undoItem.createdAt).format('YYYY-MM-DDTHH:mm:ss.SSSz')
+      }),
+    })
+      .then((res) => res.json())
+      .then(
+        (result) => {
+          setNeedLoading(true);
+          setUndoTitle('')
+          setUndoItem()
+          message.success("Undo successfully");
+        },
+        (error) => {
+          message.error("Undo failed");
+          console.log(
+            "hiendev ~ file: index.jsx ~ line 30 ~ handleOk ~ error",
+            error
+          );
+        }
+      );
+  }
+
   return (
     <div className="todo-app">
-      {/* <div className="loading">
-        {isLoading ? "Loading data..." : ""}
-      </div> */}
-      <div className="todo-container" style={{ position: "relative", padding: "8px" }}>
+      {undoTitle &&
+        <div className="undo">
+          <span className="undo-timer">{undoTimer > 0 ? undoTimer : ''}</span>
+          <span>{undoTitle}</span>
+          <Button
+            className="btn-undo"
+            type="primary"
+            onClick={onHandleUndo}
+            loading={isLoading}
+          >
+            <FontAwesomeIcon icon={faUndo} />
+          </Button>
+        </div>
+      }
+      <div className="todo-container input-add" style={{ position: "relative" }}>
         <input
           className="input-style"
           placeholder="Add new task..."
@@ -188,7 +252,7 @@ function TodoList() {
             if (event.keyCode === 13) handleAddNewItem()
           }} />
         <Button
-          style={{ position: "absolute", right: "12px" }}
+          style={{ position: "absolute", right: "4px" }}
           type="primary"
           disabled={!newName}
           onClick={handleAddNewItem}
@@ -198,6 +262,15 @@ function TodoList() {
         </Button>
       </div>
 
+      {/* Show image when there's no task */}
+      {todoList.length === 0 && toDidList.length === 0 &&
+        <div className="todo-svg-container">
+          <div className="todo-svg">
+            <ReactSVG src="todolist.svg" />
+          </div>
+        </div>
+      }
+
       <div className="todo-list-container">
         {todoList?.map((item) => {
           return (
@@ -205,12 +278,14 @@ function TodoList() {
               <div className="todo-content" onClick={() => onChecked(item)}>
                 {item.editing === false ? (
                   <>
-                    <input
-                      className="checkbox"
-                      type="checkbox"
-                      checked={item.status === "did" ? true : false}
-                      onClick={() => onChecked(item)}
-                    />
+                    <div class="round">
+                      <input
+                        id="checkbox"
+                        type="checkbox"
+                        checked={item.status === "did" ? true : false}
+                        onClick={() => onChecked(item)} />
+                      <label for="checkbox"></label>
+                    </div>
                     <div
                       key={item.id}
                       style={{
@@ -246,7 +321,7 @@ function TodoList() {
                   {item.editing === false ? <FontAwesomeIcon icon={faEdit} /> : <FontAwesomeIcon icon={faSave} />}
                 </ButtonComponent>
                 {item.editing === false && (
-                  <ButtonComponent className="button-edit-del" type="danger" onClick={() => onDeleteItem(item.id)}><FontAwesomeIcon icon={faTrash} /></ButtonComponent>
+                  <ButtonComponent className="button-edit-del" onClick={() => onDeleteItem(item)}><FontAwesomeIcon icon={faTrash} /></ButtonComponent>
                 )}
                 {item.editing === true && (
                   <ButtonComponent type="default" onClick={() => setNeedLoading(true)}>
@@ -259,26 +334,31 @@ function TodoList() {
         })}
       </div>
 
-      <div className="task-done">
-        <FontAwesomeIcon 
-          icon={faChevronUp}
-          style={{ paddingRight: '8px', paddingTop: '4px', width: '20px', height: '20px'
-          // onClick={}
-        }} /> 
-        Tasks done
-      </div>
+      {toDidList.length > 0 &&
+        <div className="tasks-done" onClick={() => {
+          setIsCollapse(!isCollapse)
+        }}>
+          <FontAwesomeIcon
+            className={`${isCollapse ? 'icon-up' : 'icon-down'}`}
+            icon={faChevronUp}
+          />
+          <span className="tasks-done-title">Tasks completed</span>
+        </div>
+      }
 
       <div className="todo-list-container">
-        {toDidList?.map((item) => {
+        {(isCollapse ? [] : toDidList).map((item) => {
           return (
             <div className="todo-container" onClick={() => onChecked(item)}>
               <div className="todo-content">
-                <input
-                  className="checkbox"
-                  type="checkbox"
-                  checked={item.status === "did" ? true : false}
-                  onClick={() => onChecked(item)}
-                />
+                <div class="round">
+                  <input
+                    id="checkbox"
+                    type="checkbox"
+                    checked={item.status === "did" ? true : false}
+                    onClick={() => onChecked(item)} />
+                  <label for="checkbox"></label>
+                </div>
                 <div
                   key={item.id}
                   style={{
@@ -291,7 +371,7 @@ function TodoList() {
               </div>
               <div className="todo-action">
                 {item.editing === false && (
-                  <ButtonComponent className="button-edit-del" type="danger" onClick={() => onDeleteItem(item.id)}><FontAwesomeIcon icon={faTrash} /></ButtonComponent>
+                  <ButtonComponent className="button-edit-del" type="danger" onClick={() => onDeleteItem(item)}><FontAwesomeIcon icon={faTrash} /></ButtonComponent>
                 )}
               </div>
             </div>

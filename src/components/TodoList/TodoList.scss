@@ -8,9 +8,36 @@ $border-style: groove;
 }
 
 .todo-app {
-  background-color: #33415c;
+  min-height: 80vh;
+  background-color: #353746;
   border-radius: 5px;
-  padding: 4px;
+  padding: 12px;
+  box-shadow: 1px 2px 16px 1px #000000;
+
+  .todo-svg-container {
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-direction: column;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    -webkit-flex-wrap: nowrap;
+    -ms-flex-wrap: nowrap;
+    flex-wrap: nowrap;
+    -webkit-justify-content: flex-start;
+    -ms-flex-pack: start;
+    justify-content: flex-start;
+    -webkit-align-content: stretch;
+    -ms-flex-line-pack: stretch;
+    align-content: stretch;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+
+    .todo-svg {
+      width: 350px;
+    }
+  }
 }
 
 .todo-list-container {
@@ -35,9 +62,15 @@ $border-style: groove;
 }
 
 .todo-container {
+  &:nth-child(odd) {
+    background-color: #43475a;
+  }
+  // &:nth-child(odd) {
+  //   background-color: #43475A;
+  // }
   width: 100%;
   padding: 0 8px;
-  margin: 4px 0;
+  margin: 2px 0;
   border-radius: 4px;
   display: -ms-flexbox;
   display: -webkit-flex;
@@ -65,7 +98,7 @@ $border-style: groove;
   transition: all 0.5s 0s ease;
 
   &:hover {
-    background-color: #445370;
+    background-color: #4f536b;
     cursor: pointer;
 
     .button-edit-del {
@@ -74,16 +107,20 @@ $border-style: groove;
   }
 }
 
+.input-add {
+  background-color: transparent !important;
+  margin: 8px 0;
+  padding: 8px 0;
+
+  &:hover {
+    background-color: transparent;
+  }
+}
+
 .todo-content {
   width: 100%;
   display: flex;
-  padding: 16px 0;
-
-  .checkbox-style {
-    margin: 0 8px 0 0;
-    width: 20px;
-    height: 20px;
-  }
+  padding: 12px 0;
 }
 
 .todo-action {
@@ -102,25 +139,73 @@ $border-style: groove;
 }
 
 .input-style {
+  background-color: #353746;
   width: 100%;
   height: 40px;
   padding: 4px;
   margin: 0;
-  border-radius: 3px;
+  border-radius: 4px;
   border-style: $border-style;
-  border: 1px solid #142850;
-  color: black;
+  border: 2px solid #43475a;
 
   &::placeholder {
+    color: #40a9ff;
     padding-left: 4px;
-    font-style: italic;
+  }
+
+  &:focus,
+  &:visited,
+  &:active {
+    outline: none;
+    border: 2px solid #40a9ff;
   }
 }
 
-.checkbox {
+.round {
   width: 20px;
   height: 20px;
-  margin-right: 8px;
+  margin: 0px 12px 0px 8px;
+  border-radius: 100%;
+  position: relative;
+}
+
+.round label {
+  background-color: #43475a;
+  border: 1px solid white;
+  border-radius: 50%;
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  top: 0;
+  left: 0;
+  position: absolute;
+}
+
+.round label:after {
+  border: 2px solid #fff;
+  border-top: none;
+  border-right: none;
+  content: '';
+  width: 12px;
+  height: 6px;
+  top: 4px;
+  left: 3px;
+  opacity: 0;
+  position: absolute;
+  transform: rotate(-45deg);
+}
+
+.round input[type='checkbox'] {
+  visibility: hidden;
+}
+
+.round input[type='checkbox']:checked + label {
+  background-color: #66bb6a;
+  border-color: #66bb6a;
+}
+
+.round input[type='checkbox']:checked + label:after {
+  opacity: 1;
 }
 
 .edit-input,
@@ -154,13 +239,74 @@ $border-style: groove;
   align-items: center;
 }
 
-.task-done {
-  padding-left: 8px;
+.tasks-done {
+  padding-top: 16px;
+  padding-bottom: 16px;
   font-size: 15px;
   font-weight: bold;
 
   &:hover {
     text-decoration: underline;
     cursor: pointer;
+  }
+
+  .tasks-done-title {
+    margin-left: 6px;
+  }
+
+  .icon-up {
+    -webkit-animation: flip-horizontal-bottom-up 0.5s
+      cubic-bezier(0.455, 0.03, 0.515, 0.955) both;
+    animation: flip-horizontal-bottom-up 0.5s
+      cubic-bezier(0.455, 0.03, 0.515, 0.955) both;
+  }
+
+  @-webkit-keyframes flip-horizontal-bottom-up {
+    0% {
+      -webkit-transform: rotateX(0);
+      transform: rotateX(0);
+    }
+    100% {
+      -webkit-transform: rotateX(-180deg);
+      transform: rotateX(-180deg);
+    }
+  }
+  @keyframes flip-horizontal-bottom-up {
+    0% {
+      -webkit-transform: rotateX(0);
+      transform: rotateX(0);
+    }
+    100% {
+      -webkit-transform: rotateX(-180deg);
+      transform: rotateX(-180deg);
+    }
+  }
+
+  .icon-down {
+    -webkit-animation: flip-horizontal-bottom-down 0.5s
+      cubic-bezier(0.455, 0.03, 0.515, 0.955) both;
+    animation: flip-horizontal-bottom-down 0.5s
+      cubic-bezier(0.455, 0.03, 0.515, 0.955) both;
+  }
+
+  @-webkit-keyframes flip-horizontal-bottom-down {
+    0% {
+      -webkit-transform: rotateX(-180deg);
+      transform: rotateX(-180deg);
+    }
+    100% {
+      -webkit-transform: rotateX(-360deg);
+      transform: rotateX(-360deg);
+    }
+  }
+  @keyframes flip-horizontal-bottom-down {
+    0% {
+      -webkit-transform: rotateX(-180deg);
+      transform: rotateX(-180deg);
+    }
+    100% {
+      -webkit-transform: rotateX(-360deg);
+      transform: rotateX(-360deg);
+    }
   }
 }

@@ -1,6 +1,73 @@
 html body {
-  background-color: #001233;
+  background: rgb(103, 126, 223);
+  background: linear-gradient(
+    160deg,
+    rgba(103, 126, 223, 1) 0%,
+    rgba(54, 191, 217, 1) 100%
+  );
   color: #f5f5f5;
+  position: relative;
+
+  .undo {
+    background-color: #43475a;
+    position: absolute;
+    top: 58px;
+    right: 30px;
+    padding: 8px;
+    border-radius: 4px;
+    // border: 1px solid white;
+
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-direction: row;
+    -ms-flex-direction: row;
+    flex-direction: row;
+    -webkit-flex-wrap: nowrap;
+    -ms-flex-wrap: nowrap;
+    flex-wrap: nowrap;
+    -webkit-justify-content: space-between;
+    -ms-flex-pack: between;
+    justify-content: space-between;
+    -webkit-align-content: stretch;
+    -ms-flex-line-pack: stretch;
+    align-content: stretch;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+
+    .btn-undo {
+      margin-left: 8px;
+    }
+
+    .undo-timer {
+      width: 32px;
+      height: 32px;
+      margin-right: 8px;
+      background-color: #43475a;
+      border-radius: 50%;
+      border: 2px solid white;
+
+      display: -ms-flexbox;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-direction: row;
+      -ms-flex-direction: row;
+      flex-direction: row;
+      -webkit-flex-wrap: nowrap;
+      -ms-flex-wrap: nowrap;
+      flex-wrap: nowrap;
+      -webkit-justify-content: center;
+      -ms-flex-pack: center;
+      justify-content: center;
+      -webkit-align-content: flex-start;
+      -ms-flex-line-pack: start;
+      align-content: flex-start;
+      -webkit-align-items: center;
+      -ms-flex-align: center;
+      align-items: center;
+    }
+  }
 }
 
 .todo-app-container {
@@ -9,8 +76,9 @@ html body {
 }
 
 h1 {
+  font-size: 40px;
   margin-top: 20px !important;
-  text-shadow: 3px 3px 5px #999999;
+  text-shadow: 1px 2px 9px black;
   text-align: center;
   color: #f5f5f5 !important;
 }
